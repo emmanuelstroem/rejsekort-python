@@ -1,14 +1,14 @@
-name: pull request
+name: release
 on:
   create:
     tags:
       - v*
 
 env:
-  IMAGE_NAME: rejsekort-python
+  IMAGE_NAME: eu.gcr.io/rejsekort/rejsekort-python
 
 jobs:
-  test:
+  deploy:
     # Add "id-token" with the intended permissions.
     permissions:
       contents: read
@@ -25,6 +25,16 @@ jobs:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL_PROVIDER }}
         service_account: ${{ secrets.REJSEKORT_SERVICE_ACCOUNT_EMAIL }}
 
+    # Setup gcloud CLI
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0
+
+    # Configure Docker to use the gcloud command-line tool as a credential
+    # helper for authentication
+    - name: GCloud Docker Auth
+      run: |-
+        gcloud --quiet auth configure-docker
+
     - name: Get Version Tag
       id: get_release_tag
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
@@ -33,7 +43,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        push: false
+        push: true
         tags: ${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}
 
     - id: 'deploy'
