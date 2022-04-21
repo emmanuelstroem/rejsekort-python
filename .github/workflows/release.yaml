@@ -1,8 +1,8 @@
 name: release
 on:
-  create:
-    tags:
-      - v*
+  push:
+    branches:
+      - main
 
 env:
   IMAGE_NAME: eu.gcr.io/rejsekort/rejsekort-python
@@ -35,26 +35,24 @@ jobs:
       run: |-
         gcloud --quiet auth configure-docker
 
-    - name: Get Version Tag
-      id: get_release_tag
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    # - name: Get Version Tag
+    #   id: get_release_tag
+    #   run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
     - name: Build an image from Dockerfile
       uses: docker/build-push-action@v2
       with:
         context: .
         push: true
-        tags: ${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}
+        tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
     - id: 'deploy'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        service: 'rejsekort'
+        service: rejsekort
         region: europe-west1
-        image: '${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}'
-        tag: ${{ steps.get_release_tag.outputs.VERSION }}
+        image: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
         env_vars: ENV=production
-
 
     - name: 'Use output'
       run: 'curl "${{ steps.deploy.outputs.url }}"'
