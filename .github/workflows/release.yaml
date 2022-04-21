@@ -1,0 +1,48 @@
+name: pull request
+on:
+  create:
+    tags:
+      - v*
+
+env:
+  IMAGE_NAME: rejsekort-python
+
+jobs:
+  test:
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: read
+      id-token: write
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL_PROVIDER }}
+        service_account: ${{ secrets.REJSEKORT_SERVICE_ACCOUNT_EMAIL }}
+
+    - name: Get Version Tag
+      id: get_release_tag
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Build an image from Dockerfile
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: false
+        tags: ${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}
+
+    - id: 'deploy'
+      uses: 'google-github-actions/deploy-cloudrun@v0'
+      with:
+        service: 'rejsekort'
+        image: '${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}'
+        env_vars: ENV=production
+
+
+    - name: 'Use output'
+      run: 'curl "${{ steps.deploy.outputs.url }}"'
