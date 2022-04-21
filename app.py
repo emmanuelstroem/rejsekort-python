@@ -2,7 +2,8 @@ from flask import Flask, Response
 import os # to get env variables 
 
 port = os.getenv('PORT', 3000)
-env = os.getenv('ENV', "development")
+env = os.getenv('ENV', "prod")
+FLASK_ENV = os.getenv('ENV', "production")
 
 app = Flask(__name__)
 
@@ -17,4 +18,5 @@ if __name__ == '__main__':
     if env == "development":
         app.run(host="0.0.0.0", debug=True, port=port)
     else:
-        app.run(port=port)
+        from waitress import serve
+        serve(app, port=port)
