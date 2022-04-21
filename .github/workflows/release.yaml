@@ -50,7 +50,9 @@ jobs:
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
         service: 'rejsekort'
+        region: europe-west1
         image: '${{ env.IMAGE_NAME }}:${{ steps.get_release_tag.outputs.VERSION }}'
+        tag: ${{ steps.get_release_tag.outputs.VERSION }}
         env_vars: ENV=production
 
 
