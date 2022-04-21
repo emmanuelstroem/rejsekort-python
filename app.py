@@ -15,6 +15,6 @@ def health_check():
 # run app in debug mode if env is development 
 if __name__ == '__main__':
     if env == "development":
-        app.run(debug=True, port=3000)
+        app.run(host="0.0.0.0", debug=True, port=port)
     else:
-        app.run(port=3000)
+        app.run(port=port)
