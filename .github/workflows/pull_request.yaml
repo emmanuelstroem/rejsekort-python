@@ -19,6 +19,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Install Bandit
+      run: pip install Bandit
+
+    - name: Bandit Scan
+      run: bandit app.py functions/*.py
+
     - id: 'auth'
       uses: 'google-github-actions/auth@v0'
       with:

@@ -26,3 +26,32 @@ Python Scrapper that returns Rejsekort Restful API
 This will start a server which can be accessed on http://localhost:3000
 
 #### Server
+Set environment variable for production:
+`ENV=production` or something other than `development`
+
+## Usage
+Once the server is up and running, requests can be made to these available endpoints.
+
+#### Health Check
+1. Request:
+  `http://localhost:3000`
+
+2. Response:
+    ```
+    {
+      "status": "Healthy"
+    }
+    ```
+
+#### Login
+Username and Password can be generated from rejsekort self-service portal.
+1. Post Request to: 
+    `http://localhost:3000/login`
+
+2. Request Body as raw JSON.
+    ```
+    {
+      "username": "<USERNAME>",
+      "password": "<PASSWORD>"
+    }
+    ```
