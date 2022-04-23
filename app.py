@@ -73,8 +73,8 @@ def login():
     cards = extract_card_details(active_cards, session, token)
 
     user_data = {
-      "cards": cards,
-      "user": user_details
+      "user": user_details,
+      "cards": cards
     }
 
     # Clear Session Cookies for next request

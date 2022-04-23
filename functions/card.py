@@ -3,7 +3,7 @@ from functions import shared
 from bs4 import BeautifulSoup
 import re, json
 
-def fetch_card_expiry_date(prefix, session, token):
+def fetch_card_expiry(prefix, session, token):
   """Fetch Card Expiry date using shared session, prefix and token
   
   Parameters
@@ -91,12 +91,12 @@ def fetch_travel_history(prefix, session, token):
       orders.append(travel)
       journeys.pop(index)
 
-  data = {
+  travel_data = {
     "journeys": journeys,
     "orders": orders
   }
 
-  return json.dumps(data, indent=2, ensure_ascii=False)
+  return travel_data
 
 
 def extract_card_details(cards, session, token):
@@ -121,7 +121,7 @@ def extract_card_details(cards, session, token):
     for card_element in card_elements:
       if card_element.find("div", class_="customer_name") and card_element.find('a') and card_element.find('span', attrs={'class': 'bold right'}):
         card_prefix = card_element.find('a')['href'].split('/')[-1]
-        card_expiry_date = fetch_card_expiry_date(card_prefix, session, token)
+        card_expiry_date = fetch_card_expiry(card_prefix, session, token)
         journeys_and_orders = fetch_travel_history(card_prefix, session, token)
 
         data = {
@@ -131,8 +131,8 @@ def extract_card_details(cards, session, token):
           'electric_number': card_prefix.split("cardElectronicNumber=")[1],
           'prefix': card_prefix,
           'expiry_date': card_expiry_date,
-          'history': journeys_and_orders,
-          'status': 'active'
+          'status': 'active',
+          'history': journeys_and_orders
         }
 
         cards_list.append(data)
