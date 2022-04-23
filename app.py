@@ -85,11 +85,11 @@ def login():
     # end successful login
 
 
-# run app in debug mode if env is development 
-# use waitress for production
+# for docker run, host is required. app.run(host="0.0.0.0", debug=True) 
+# serve production using waitress because it is WSGI
 if __name__ == '__main__':
   if env == "development":
-    app.run(host="0.0.0.0", debug=True, port=port)
+    app.run(port=port)
   else:
     from waitress import serve
     serve(app, port=port)
