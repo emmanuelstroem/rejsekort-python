@@ -35,7 +35,7 @@ def fetch_user_details(session, token):
           info[field[0]] = td.text.strip()
       info_details.update(info)
 
-  return json.dumps(info_details, indent=2, ensure_ascii=False)
+  return info_details
 
 
 # ChangeUsername: /CWS/CustomerManagement/ChangeUsername
