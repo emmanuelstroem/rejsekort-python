@@ -122,7 +122,7 @@ def extract_card_details(cards, session, token):
       if card_element.find("div", class_="customer_name") and card_element.find('a') and card_element.find('span', attrs={'class': 'bold right'}):
         card_prefix = card_element.find('a')['href'].split('/')[-1]
         card_expiry_date = fetch_card_expiry(card_prefix, session, token)
-        journeys_and_orders = fetch_travel_history(card_prefix, session, token)
+        history = fetch_travel_history(card_prefix, session, token)
 
         data = {
           'name': card_element.find("div", class_="customer_name").string.strip(),
@@ -132,7 +132,8 @@ def extract_card_details(cards, session, token):
           'prefix': card_prefix,
           'expiry_date': card_expiry_date,
           'status': 'active',
-          'history': journeys_and_orders
+          'journeys': history["journeys"],
+          'orders': history["orders"]
         }
 
         cards_list.append(data)
