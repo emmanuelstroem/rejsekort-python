@@ -44,7 +44,8 @@ def login():
     '__RequestVerificationToken': login_request_verification_token
   }
 
-  login_page = session.post(shared.base_url + '/CWS/Home/Index', login_credentials)
+  # ⬇ NOTE: Rejsekort changed the Username login URL from Index to UserNameLogin
+  login_page = session.post(shared.base_url + '/CWS/Home/UserNameLogin', login_credentials)
   soup = BeautifulSoup(login_page.text, "html.parser")
   token = shared.get_verification_token(login_page)
 
