@@ -35,7 +35,7 @@ def login():
   # Get Login Page HTML
   # Timeout after 10seconds 
   login_page_html = session.get(shared.base_url + '/CWS/Home/UserNameLogin', timeout=shared.requests_timeout)
-  login_request_verification_token = shared.get_verification_token(login_page_html)
+  login_request_verification_token = shared.get_verification_token(login_page_html.text)
 
   # Build post data for login
   login_credentials = {
@@ -47,7 +47,7 @@ def login():
   # ⬇ NOTE: Rejsekort changed the Username login URL from Index to UserNameLogin
   login_page = session.post(shared.base_url + '/CWS/Home/UserNameLogin', login_credentials)
   soup = BeautifulSoup(login_page.text, "html.parser")
-  token = shared.get_verification_token(login_page)
+  token = shared.get_verification_token(login_page.text)
 
   # Check if login_page contains error in response and return message to user.
   # Otherwise, continue to get user details and travel history
