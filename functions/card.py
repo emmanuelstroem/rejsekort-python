@@ -3,7 +3,7 @@ from socket import timeout
 from functions import shared
 from bs4 import BeautifulSoup
 import re
-import concurrent.futures
+import json
 
 
 def fetch_card_expiry(prefix, session, token):
@@ -38,50 +38,33 @@ def fetch_card_expiry(prefix, session, token):
 
 
 def fetch_travel_history(prefix, session, token):
+    page = 1
     url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
-    params = {'periodSelected': 'All', '__RequestVerificationToken': token}
+    params = {'periodSelected': 'All', '__RequestVerificationToken': token, 'page': 1}
     history = session.get(url, params=params, timeout=shared.requests_timeout)
     soup = BeautifulSoup(history.text, "lxml")
-    history_table = soup.find('div', class_='historyPage')
+    # history_page_divs = soup.find_all('div', {"class": "historyPage"})
+    # tables = soup.find_all("table", {"id": "historyTravels"})
 
-    journeys = []
-    orders = []
-    fields = []
+    # find all rows in the table
+    rows = soup.find_all('tr')
 
-    # get th as Keys
-    for row in history_table.table.find_all('tr', recursive=False):
-        table_headers = row.find_all('th', recursive=False)
-        for th in table_headers:
-            if len(th.text.strip()) == 0 and "Journey no." not in table_headers:
-                fields.append("Transaction Type")
-            else:
-                fields.append(th.text.strip())
-    # get td as Values
-    for row in history_table.table.find_all('tr', recursive=False):
-        travel_records = {}
-        for index, td in enumerate(row.find_all('td', recursive=False)):
-            if td.img:
-                travel_records[fields[index]] = re.sub(" +", " ", td.img['transactionscreentype'].strip())
-            else:
-                if len(td.text.replace('\r\n', '').strip()) == 0:
-                    pass
-                else:
-                    travel_records[fields[index]] = re.sub(" +", " ", td.text.replace('\r\n', '').strip())
-        if travel_records:
-            journeys.append(travel_records)
+    # get the headers from the first rowx
+    headers = [th.text for th in rows[0].find_all('th')]
 
-    for index, travel in enumerate(journeys):
-        # check if Transaction Type is empty and remove the key with its value
-        # otherwise, its an "order" or "topup" - add it to orders
-        if "Transaction Type" in travel and travel["Transaction Type"] == '':
-            travel.pop("Transaction Type")
-        else:
-            orders.append(travel)
-            journeys.pop(index)
+    dataset = [{headers[i]: cell.text.strip() for i, cell in enumerate(row.find_all('td'))} for row in rows[1:]]
+
+    orders = list(filter(lambda x: "Reload agreement" in x.values() or "Rejsekort ordered" in x.values(), dataset))
+    # Remove empty key-values and empty objects from orders
+    orders = [{k: v for k, v in d.items() if v} for d in orders]
+
+    journeys = list(filter(lambda x: x not in orders, dataset))
+    # Remove empty key-values and empty objects from journeys
+    journeys = [{k: v for k, v in d.items() if v} for d in journeys]
 
     travel_data = {
-        "journeys": journeys,
-        "orders": orders
+        "journeys": list(filter(bool, journeys)),
+        "orders": list(filter(bool, orders))
     }
 
     return travel_data
