@@ -37,22 +37,40 @@ def fetch_card_expiry(prefix, session, token):
         print(f"An error occurred: {e}")
 
 
-def fetch_travel_history(prefix, session, token):
+def get_paginated_travel_history(session, prefix, token):
     page = 1
-    url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
-    params = {'periodSelected': 'All', '__RequestVerificationToken': token, 'page': 1}
-    history = session.get(url, params=params, timeout=shared.requests_timeout)
-    soup = BeautifulSoup(history.text, "lxml")
-    # history_page_divs = soup.find_all('div', {"class": "historyPage"})
-    # tables = soup.find_all("table", {"id": "historyTravels"})
+    has_next = True
+    rows = []
 
-    # find all rows in the table
-    rows = soup.find_all('tr')
+    while has_next:
+        url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
+        params = {'periodSelected': 'All', '__RequestVerificationToken': token, 'page': page}
+        history = session.get(url, params=params, timeout=shared.requests_timeout)
+        soup = BeautifulSoup(history.text, "lxml")
 
-    # get the headers from the first rowx
+        pages = len(soup.find_all('div', {"class": "historyPage"}))
+
+        # find all rows in the table
+        data = soup.find_all('tr')
+        rows.extend(data)
+
+        # check if there is a 'Next' button in the pagination
+        pagination = soup.find_all('span', {"class": "paginationButton"}, {"name": "goToPage"})
+        has_next = any('Next' in result.text for result in pagination)
+
+        if has_next:
+            page += pages
+    
+    # get the headers from the first row
     headers = [th.text for th in rows[0].find_all('th')]
 
     dataset = [{headers[i]: cell.text.strip() for i, cell in enumerate(row.find_all('td'))} for row in rows[1:]]
+    
+    return dataset
+
+
+def fetch_travel_history(prefix, session, token):
+    dataset = get_paginated_travel_history(session, prefix, token)
 
     orders = list(filter(lambda x: "Reload agreement" in x.values() or "Rejsekort ordered" in x.values(), dataset))
     # Remove empty key-values and empty objects from orders
