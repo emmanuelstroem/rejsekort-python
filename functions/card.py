@@ -31,7 +31,6 @@ def fetch_card_expiry(prefix, session, token):
         expiry_date = re.search(r'\d{2}/\d{2}/\d{4}', details.text)
         if expiry_date is None:
             raise ValueError("Expiry date not found")
-
         return expiry_date.group(0)
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -104,35 +103,45 @@ def extract_card_details(cards, session, token):
     """
 
     cards_list = []
-
     for card in cards:
         card_elements = card.find_all('div', class_='my_rejsekort_card_element')
         for card_element in card_elements:
-            try:
-                customer_name = card_element.find("div", class_="customer_name").string.strip()
-                card_link = card_element.find('a')
-                card_balance = card_element.find('span', class_='bold right').string + ' kr'
-                card_prefix = card_link['href'].split('/')[-1]
-                card_expiry_date = fetch_card_expiry(card_prefix, session, token)
-                history = fetch_travel_history(card_prefix, session, token)
+            if card_element.find("div", class_="customer_name"):
+                try:
+                    customer_name = None
+                    card_balance = None
+                    card_link = None
+                    card_prefix = None
+                    if card_element.find("div", class_="customer_name"):
+                        customer_name = card_element.find("div", class_="customer_name").string.strip()
+                    if card_element.find('span', class_='bold right'):
+                        card_balance = card_element.find('span', class_='bold right').string + ' kr'
+                    if card_element.find('a'):
+                        card_link = card_element.find('a')
+                        card_prefix = card_link['href'].split('/')[-1]
+                    card_expiry_date = fetch_card_expiry(card_prefix, session, token)
+                    history = fetch_travel_history(card_prefix, session, token)
 
-                data = {
-                    'name': customer_name,
-                    'number': card_link.text,
-                    'balance': card_balance,
-                    'electric_number': card_prefix.split("cardElectronicNumber=")[1],
-                    'prefix': card_prefix,
-                    'expiry_date': card_expiry_date,
-                    'status': 'active',
-                    'journeys': history["journeys"],
-                    'orders': history["orders"]
-                }
+                    data = {
+                        'name': customer_name,
+                        'number': card_link.text,
+                        'balance': card_balance,
+                        'electric_number': card_prefix.split("cardElectronicNumber=")[1],
+                        'prefix': card_prefix,
+                        'expiry_date': card_expiry_date,
+                        'status': 'active',
+                        'journeys': history["journeys"],
+                        'orders': history["orders"]
+                    }
 
-                cards_list.append(data)
-            except Exception as e:
-                logging.error('Error extracting card details: %s', exc_info=e)
-            else:
-                logging.error('Could not extract card details. No exceptions caught')
+                    cards_list.append(data)
+                except Exception as e:
+                    logging.error('Error extracting card details: %s', e)
+                # else:
+                #     logging.error('Could not extract card details. No exceptions caught')
+            # else:
+            #     # logging.error('===> Invalid Card')
+            #     pass
 
     return cards_list
 

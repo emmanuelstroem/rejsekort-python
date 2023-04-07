@@ -24,12 +24,13 @@ def fetch_user_details(session, token):
                           data={'__RequestVerificationToken': token}, timeout=shared.requests_timeout)
 
     soup = BeautifulSoup(details.text, "lxml")
-    my_info_container = soup.find('div', class_='my-information-modifiable-container')
+    
+    my_info_container = soup.find('div', class_='my-information-outer-container')
 
     if not my_info_container:
-        raise ValueError("my-information-modifiable-container not found in the HTML page.")
+        raise ValueError("my-information-outer-container not found in the HTML page.")
 
-    info_tables = my_info_container.find_all('table', class_='myInformationReadOnlyTable')
+    info_tables = soup.find_all('table', class_='myInformationReadOnlyTable')
 
     if not info_tables:
         raise ValueError("myInformationReadOnlyTable not found in the HTML page.")
