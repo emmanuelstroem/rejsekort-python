@@ -1,5 +1,7 @@
 import logging
 from socket import timeout
+from typing import Dict, List
+
 from functions import shared
 from bs4 import BeautifulSoup
 import re
@@ -36,51 +38,78 @@ def fetch_card_expiry(prefix, session, token):
         print(f"An error occurred: {e}")
 
 
+def get_paginated_travel_history(session, prefix, token):
+    """
+    Retrieves all paginated data from a table and return it in the form of a list of dictionaries
+
+    Parameters:
+    session (Session) : session object to handle the connection with the server
+    prefix (str) : prefix for the url
+    token (str) : token for the request
+
+    Returns:
+    List[Dict[str,str]] : list of dictionaries containing the data
+    """
+
+    page = 1
+    has_next = True
+    rows = []
+
+    while has_next:
+        url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
+        params = {'periodSelected': 'All', '__RequestVerificationToken': token, 'page': page}
+        history = session.get(url, params=params, timeout=shared.requests_timeout)
+        soup = BeautifulSoup(history.text, "lxml")
+
+        pages = len(soup.find_all('div', {"class": "historyPage"}))
+
+        # find all rows in the table
+        data = soup.find_all('tr')
+        rows.extend(data)
+
+        # check if there is a 'Next' button in the pagination
+        pagination = soup.find_all('span', {"class": "paginationButton"}, {"name": "goToPage"})
+        has_next = any('Next' in result.text for result in pagination)
+
+        if has_next:
+            page += pages
+
+    # get the headers from the first row
+    headers = [th.text for th in rows[0].find_all('th')]
+
+    dataset = [{headers[i]: cell.text.strip() for i, cell in enumerate(row.find_all('td'))} for row in rows[1:]]
+
+    return dataset
+
+
 def fetch_travel_history(prefix, session, token):
-    url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
-    params = {'periodSelected': 'All', '__RequestVerificationToken': token}
-    history = session.get(url, params=params, timeout=shared.requests_timeout)
-    soup = BeautifulSoup(history.text, "lxml")
-    history_table = soup.find('div', class_='historyPage')
+    """
+    Retrieves the travel history data, separates it into orders and journeys, and returns it as a dictionary
 
-    journeys = []
-    orders = []
-    fields = []
+    Parameters:
+    prefix (str) : prefix for the url
+    session (Session) : session object to handle the connection with the server
+    token (str) : token for the request
 
-    # get th as Keys
-    for row in history_table.table.find_all('tr', recursive=False):
-        table_headers = row.find_all('th', recursive=False)
-        for th in table_headers:
-            if len(th.text.strip()) == 0 and "Journey no." not in table_headers:
-                fields.append("Transaction Type")
-            else:
-                fields.append(th.text.strip())
-    # get td as Values
-    for row in history_table.table.find_all('tr', recursive=False):
-        travel_records = {}
-        for index, td in enumerate(row.find_all('td', recursive=False)):
-            if td.img:
-                travel_records[fields[index]] = re.sub(" +", " ", td.img['transactionscreentype'].strip())
-            else:
-                if len(td.text.replace('\r\n', '').strip()) == 0:
-                    pass
-                else:
-                    travel_records[fields[index]] = re.sub(" +", " ", td.text.replace('\r\n', '').strip())
-        if travel_records:
-            journeys.append(travel_records)
+    Returns:
+    Dict[str, List[Dict[str,str]]] : dictionary containing the data for orders and journeys
+    """
+    # cProfile.run(get_paginated_travel_history(session, prefix, token))
+    dataset = get_paginated_travel_history(session, prefix, token)
 
-    for index, travel in enumerate(journeys):
-        # check if Transaction Type is empty and remove the key with its value
-        # otherwise, its an "order" or "topup" - add it to orders
-        if "Transaction Type" in travel and travel["Transaction Type"] == '':
-            travel.pop("Transaction Type")
-        else:
-            orders.append(travel)
-            journeys.pop(index)
+    orders = list(filter(
+        lambda x: "Reload agreement" in x.values() or "Reload" in x.values() or "Rejsekort ordered" in x.values(),
+        dataset))
+    # Remove empty key-values and empty objects from orders
+    orders = [{k: v for k, v in d.items() if v} for d in orders]
 
-    travel_data = {
-        "journeys": journeys,
-        "orders": orders
+    journeys = list(filter(lambda x: x not in orders, dataset))
+    # Remove empty key-values and empty objects from journeys
+    journeys = [{k: v for k, v in d.items() if v} for d in journeys]
+
+    travel_data: dict[str, list[dict]] = {
+        "journeys": list(filter(bool, journeys)),
+        "orders": list(filter(bool, orders))
     }
 
     return travel_data
