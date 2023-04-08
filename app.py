@@ -82,7 +82,7 @@ def login():
         session.cookies.clear()
         session.close()
 
-        return json.dumps(user_data)
+        return json.dumps(user_data, indent=2, ensure_ascii=False)
         # end successful login
 
 

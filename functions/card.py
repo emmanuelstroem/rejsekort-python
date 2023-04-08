@@ -106,16 +106,12 @@ def extract_card_details(cards, session, token):
     for card in cards:
         card_elements = card.find_all('div', class_='my_rejsekort_card_element')
         for card_element in card_elements:
-            if card_element.find("div", class_="customer_name"):
+            if card_element.find("div", class_="customer_name") and card_element.find('span', class_='bold right'):
                 try:
-                    customer_name = None
-                    card_balance = None
+                    customer_name = card_element.find("div", class_="customer_name").string.strip()
+                    card_balance = card_element.find('span', class_='bold right').string + ' kr'
                     card_link = None
                     card_prefix = None
-                    if card_element.find("div", class_="customer_name"):
-                        customer_name = card_element.find("div", class_="customer_name").string.strip()
-                    if card_element.find('span', class_='bold right'):
-                        card_balance = card_element.find('span', class_='bold right').string + ' kr'
                     if card_element.find('a'):
                         card_link = card_element.find('a')
                         card_prefix = card_link['href'].split('/')[-1]
