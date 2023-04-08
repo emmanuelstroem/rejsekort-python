@@ -61,13 +61,13 @@ def login():
         session.cookies.clear()
         session.close()
         login_error = {"error": "unsuccessful login"}
-        return json.dumps(login_error, indent=2, ensure_ascii=False), 401
+        return json.dumps(login_error, indent=2, ensure_ascii=False), 401, {"Content-Type": "application/json"}
     elif login_page_html.status_code == 500:
         # Close and Clear Session Cookies for next request
         session.cookies.clear()
         session.close()
         timeout_error = {"error": "request timed out"}
-        return json.dumps(timeout_error, indent=2, ensure_ascii=False), 500
+        return json.dumps(timeout_error, indent=2, ensure_ascii=False), 500, {"Content-Type": "application/json"}
     else:
         # Login was successful
         user_details = fetch_user_details(session, token)
@@ -82,7 +82,7 @@ def login():
         session.cookies.clear()
         session.close()
 
-        return json.dumps(user_data, indent=2, ensure_ascii=False)
+        return json.dumps(user_data, indent=2, ensure_ascii=False), 200, {"Content-Type": "application/json"}
         # end successful login
 
 
