@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-beautifulsoup4 = "~=4.11.1"
+beautifulsoup4 = "~=4.12.2"
 flask = "~=2.3.2"
 requests = "~=2.27.1"
 waitress = "~=2.1.2"
