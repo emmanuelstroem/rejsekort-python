@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+beautifulsoup4 = "~=4.11.1"
+flask = "~=2.1.1"
+requests = "~=2.27.1"
+waitress = "~=2.1.2"
+python-dateutil = "~=2.8.2"
+lxml = "~=4.9.2"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
