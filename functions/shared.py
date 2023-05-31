@@ -39,7 +39,7 @@ def get_verification_token(html_page):
         raise ValueError("__RequestVerificationToken input tag not found in the HTML page.")
 
     # Parse the input tag using BeautifulSoup
-    soup = BeautifulSoup(token_input_tag.group(0), "lxml")
+    soup = BeautifulSoup(token_input_tag.group(0), "html.parser")
     try:
         token = soup.find('input')['value']
     except KeyError:

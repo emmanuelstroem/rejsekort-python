@@ -22,7 +22,7 @@ def fetch_user_details(session, token):
     details = session.get(shared.base_url + '/CWS/CustomerManagement/MyInformation',
                           data={'__RequestVerificationToken': token}, timeout=shared.requests_timeout)
 
-    soup = BeautifulSoup(details.text, "lxml")
+    soup = BeautifulSoup(details.text, "html.parser")
     my_info_container = soup.find('div', {"id": "readonlyDisplay"})
 
     if not my_info_container:

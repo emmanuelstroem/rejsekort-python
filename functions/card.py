@@ -59,7 +59,7 @@ def get_paginated_travel_history(session, prefix, token):
         url = shared.base_url + '/CWS/TransactionServices/TravelCardHistory/' + prefix
         params = {'periodSelected': 'All', '__RequestVerificationToken': token, 'page': page}
         history = session.get(url, params=params, timeout=shared.requests_timeout)
-        soup = BeautifulSoup(history.text, "lxml")
+        soup = BeautifulSoup(history.text, "html.parser")
 
         pages = len(soup.find_all('div', {"class": "historyPage"}))
 
