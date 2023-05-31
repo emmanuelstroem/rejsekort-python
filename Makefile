@@ -9,7 +9,8 @@ run: setup
 setup:
 	test -d venv || python3 -m venv $(VENV)
 	. "$(VENV)"/bin/activate
-	$(PIP) install -r requirements.txt
+	$(PIP) install --upgrade pip
+	$(PIP) install --upgrade -r requirements.txt
 .PHONY: setup
 
 clean:
