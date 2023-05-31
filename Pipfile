@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 beautifulsoup4 = "~=4.11.1"
-flask = "~=2.1.1"
+flask = "~=2.3.2"
 requests = "~=2.27.1"
 waitress = "~=2.1.2"
 python-dateutil = "~=2.8.2"
