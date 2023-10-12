@@ -27,11 +27,11 @@
         },
         "blinker": {
             "hashes": [
-                "sha256:4afd3de66ef3a9f8067559fb7a1cbe555c17dcbe15971b05d1b625c3e7abe213",
-                "sha256:c3d739772abb7bc2860abf5f2ec284223d9ad5c76da018234f6f50d6f31ab1f0"
+                "sha256:152090d27c1c5c722ee7e48504b02d76502811ce02e1523553b4cf8c8b3d3a8d",
+                "sha256:296320d6c28b006eb5e32d4712202dbcdcbf5dc482da298c2f44881c43884aaa"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==1.6.2"
+            "version": "==1.6.3"
         },
         "certifi": {
             "hashes": [
@@ -147,12 +147,12 @@
         },
         "flask": {
             "hashes": [
-                "sha256:77fd4e1249d8c9923de34907236b747ced06e5467ecac1a7bb7115ae0e9670b0",
-                "sha256:8c2f9abd47a9e8df7f0c3f091ce9497d011dc3b31effcf4c85a6e2b50f4114ef"
+                "sha256:21128f47e4e3b9d597a3e8521a329bf56909b690fcc3fa3e477725aa81367638",
+                "sha256:cfadcdb638b609361d29ec22360d6070a77d7463dcb3ab08d2c2f2f168845f58"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==2.3.2"
+            "version": "==3.0.0"
         },
         "idna": {
             "hashes": [
@@ -382,7 +382,6 @@
                 "sha256:7a7c7003b000adf9e7ca2a377c9688bbc54ed41b985789ed576570342a375cd2",
                 "sha256:b19e1a85d206b56d7df1d5e683df4a7725252a964e3993648dd0fb5a1c157564"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.0.6"
         },
