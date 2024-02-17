@@ -42,19 +42,30 @@ def login(username, password):
         except Exception as e:
             logging.error(f"Error parsing cookie datetime from header: {e}")
 
-        user_details = {
-            "user": details,
-            "cards": cards,
-            "credentials": {    
-                "username": username,
-                "password": password,
-                "cookies": {
-                    "data": shared.session.cookies.get_dict(),
-                    "issue": str(login_time),
-                    "expiry": str(login_expiry)
-                }
+        details["cards"] = cards
+        details["credentials"] = {
+            "username": username,
+            "password": password,
+            "cookies": {
+                "data": shared.session.cookies.get_dict(),
+                "issue": str(login_time),
+                "expiry": str(login_expiry)
             }
         }
+
+        # user_details = {
+        #     "user": details,
+        #     "cards": cards,
+        #     "credentials": {    
+        #         "username": username,
+        #         "password": password,
+        #         "cookies": {
+        #             "data": shared.session.cookies.get_dict(),
+        #             "issue": str(login_time),
+        #             "expiry": str(login_expiry)
+        #         }
+        #     }
+        # }
 
         # print(json.dumps(shared.session.cookies.get_dict(), indent=2, ensure_ascii=False))
         
@@ -62,7 +73,7 @@ def login(username, password):
         shared.session.cookies.clear()
         shared.session.close()
 
-        return json.dumps(user_details, indent=2, ensure_ascii=False)
+        return json.dumps(details, indent=2, ensure_ascii=False)
         # end successful login
             
     # error_on_login_page = re.search(r'Sorry. A technical error has occurred', login_page.text)
