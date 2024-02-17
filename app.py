@@ -1,9 +1,8 @@
 from flask import Flask, request
-from functions import shared
-from functions.user import fetch_user_details
-from functions.card import extract_card_details
+from functions import authenticate, shared
+from functions import travel
 from bs4 import BeautifulSoup
-import os, re, json, requests
+import os, json, requests
 
 port = os.getenv('PORT', 3000)
 env = os.getenv('ENV', "development")
@@ -12,78 +11,38 @@ app = Flask(__name__)
 
 session = requests.Session()
 
-
 @app.route('/')
 def health_check():
     """Return health check JSON response
     """
     return {"status": "Healthy"}, 200, {"Content-Type": "application/json"}
 
+@app.route('/fetch', methods=['POST'])
+def fetch():
+    request_data = request.get_json()
+    periodSelected = request_data['periodSelected']
+    cookies = request_data['cookies']
+    prefix = request_data['prefix']
+
+    shared.session.cookies.update(cookies)
+    
+    history = travel.get_history(cookies, prefix, periodSelected)
+
+    if "journey" in history or "orders" in history:
+        return app.response_class(response=history, status=200, mimetype='application/json')
+    else:
+        return app.response_class(response=json.dumps({"Fetch": "No Travel History"}), status=204, mimetype='application/json')
 
 @app.route('/login', methods=['POST'])
 def login():
-    """Login user and fetch details, cards and journeys
-
-  Parameters
-  ----------
-  username: str
-    username created from selfservice portal: https://selvbetjening.rejsekort.dk/
-  password: str
-    password associated with the user account above
-  """
+    
     request_data = request.get_json()
+    details = authenticate.login(request_data['username'], request_data['password'])
 
-    # Get Login Page HTML
-    # Timeout after 10seconds
-    login_page_html = session.get(shared.base_url + '/CWS/Home/UserNameLogin', timeout=shared.requests_timeout)
-    login_request_verification_token = shared.get_verification_token(login_page_html.text)
-
-    # Build post data for login
-    login_credentials = {
-        'Username': request_data['username'],
-        'Password': request_data['password'],
-        '__RequestVerificationToken': login_request_verification_token
-    }
-
-    # ⬇ NOTE: Rejsekort changed the Username login URL from Index to UserNameLogin
-    login_page = session.post(shared.base_url + '/CWS/Home/UserNameLogin', login_credentials)
-    soup = BeautifulSoup(login_page.text, "html.parser")
-    token = shared.get_verification_token(login_page.text)
-
-    # Check if login_page contains error in response and return message to user.
-    # Otherwise, continue to get user details and travel history
-
-    # TODO: fix error string/message to search for in place of YaNeverKNOW
-    error_on_login_page = re.search(r'Sorry. A technical error has occurred', login_page.text)
-    if error_on_login_page:
-        # Error Loggin In. Clear Session Cookies for next request
-        # StatusCode 401 is unauthorized/unauthenticated
-        session.cookies.clear()
-        session.close()
-        login_error = {"error": "unsuccessful login"}
-        return json.dumps(login_error, indent=2, ensure_ascii=False), 401, {"Content-Type": "application/json"}
-    elif login_page_html.status_code == 500:
-        # Close and Clear Session Cookies for next request
-        session.cookies.clear()
-        session.close()
-        timeout_error = {"error": "request timed out"}
-        return json.dumps(timeout_error, indent=2, ensure_ascii=False), 500, {"Content-Type": "application/json"}
+    if "Login Failed" in details:
+        return app.response_class(response=details, status=401, mimetype='application/json')
     else:
-        # Login was successful
-        user_details = fetch_user_details(session, token)
-        active_cards = soup.find_all('div', class_='ActiveCard')
-        cards = extract_card_details(active_cards, session, token)
-        user_data = {
-            "user": user_details,
-            "cards": cards
-        }
-
-        # Clear Session Cookies for next request
-        session.cookies.clear()
-        session.close()
-
-        return json.dumps(user_data, indent=2, ensure_ascii=False), 200, {"Content-Type": "application/json"}
-        # end successful login
+        return app.response_class(response=details, status=200, mimetype='application/json')
 
 
 # for docker run, host is required. app.run(host="0.0.0.0", debug=True) 
