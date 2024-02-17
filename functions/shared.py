@@ -1,4 +1,4 @@
-import re
+import re, requests
 from bs4 import BeautifulSoup
 
 base_url = "https://selvbetjening.rejsekort.dk"
@@ -9,23 +9,10 @@ requests_timeout = 10
 
 pattern = re.compile(r'<input[^>]*name="__RequestVerificationToken"[^>]*>')
 
+session = requests.Session()
+
 
 def get_verification_token(html_page):
-    """
-    Extract the __RequestVerificationToken from the HTML page.
-
-    Args:
-    html_page (str): The HTML page to extract the token from.
-
-    Returns:
-    str: The __RequestVerificationToken value.
-
-    Raises:
-    ValueError: If the __RequestVerificationToken input tag is not found in the HTML page.
-    TypeError: If the html_page is not a string
-    ValueError: If the html_page is empty
-    """
-
     if not isinstance(html_page, str):
         raise TypeError("html_page must be a string.")
     if not html_page:
@@ -45,3 +32,11 @@ def get_verification_token(html_page):
     except KeyError:
         raise ValueError("__RequestVerificationToken input tag not contain value attribute.")
     return token
+
+
+def get_request_verification_token():
+    # Get Login Page HTML
+    # Timeout after 10seconds
+    login_page_html = session.get(base_url + '/CWS/Home/UserNameLogin', timeout=requests_timeout)
+    login_request_verification_token = get_verification_token(login_page_html.text)
+    return login_request_verification_token

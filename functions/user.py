@@ -2,25 +2,9 @@ from functions import shared
 from bs4 import BeautifulSoup
 
 
-def fetch_user_details(session, token):
-    """
-    Fetch the user details from the website.
-
-    Args:
-    session (requests.Session): The session object with the user's cookies.
-    token (str): The __RequestVerificationToken value.
-
-    Returns:
-    dict: A dictionary containing the user's details.
-
-    Raises:
-    ValueError: If the __RequestVerificationToken input tag is not found in the HTML page.
-    ValueError: If the myInformationReadOnlyTable is not found in the HTML page.
-    """
-
+def get_details():
     # Fetch the user details from the website
-    details = session.get(shared.base_url + '/CWS/CustomerManagement/MyInformation',
-                          data={'__RequestVerificationToken': token}, timeout=shared.requests_timeout)
+    details = shared.session.get(shared.base_url + '/CWS/CustomerManagement/MyInformation', timeout=shared.requests_timeout)
 
     soup = BeautifulSoup(details.text, "lxml")
     my_info_container = soup.find('div', {"id": "readonlyDisplay"})
@@ -45,6 +29,7 @@ def fetch_user_details(session, token):
                 info_details[key] = value
 
     return info_details
+
 
 
 # ChangeUsername: /CWS/CustomerManagement/ChangeUsername
