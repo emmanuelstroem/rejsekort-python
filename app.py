@@ -31,7 +31,7 @@ def fetch():
     if "journey" in history or "orders" in history:
         return app.response_class(response=history, status=200, mimetype='application/json')
     else:
-        return app.response_class(response=json.dumps({"Fetch": "No Travel History"}), status=204, mimetype='application/json')
+        return app.response_class(response=json.dumps({}), status=200, mimetype='application/json')
 
 @app.route('/login', methods=['POST'])
 def login():
