@@ -26,6 +26,7 @@ jobs:
         run: bandit app.py functions/*.py
 
       - name: Authenticate with Google Cloud
+        if: github.actor != 'dependabot[bot]'
         id: auth
         uses: google-github-actions/auth@v2
         with:
